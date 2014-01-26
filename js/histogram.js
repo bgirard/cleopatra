@@ -373,13 +373,21 @@ var HistogramContainer;
           // calculate what to display for a set of data which falls under the same
           // pixel / bar
           var s = slice[0];
-          value = s.height;
+          if (gShowHeapAllocatedInfo) {
+            value = s.scaledHeapAllocated;
+          } else {
+            value = s.height;
+          }
           movingValue = s.movingHeight;
           red = 0;
           for (var i = 0; i < slice.length; i++) {
             s = slice[i];
             // max value
-            value = Math.max(value, s.height);
+            if (gShowHeapAllocatedInfo) {
+              value = Math.max(value, s.scaledHeapAllocated);
+            } else {
+              value = Math.max(value, s.height);
+            }
             // max moving value
             movingValue = Math.max(movingValue, s.movingHeight);
             // total unresponsiveness
@@ -733,6 +741,9 @@ var HistogramContainer;
         if (gShowPowerInfo) {
           var index = this.histogram.pixelToIndex(x);
           str = this.histogram.data[index].power.toFixed(1) + " Watts"
+        } else if (gShowHeapAllocatedInfo) {
+          var index = this.histogram.pixelToIndex(x);
+          str = this.histogram.data[index].heapAllocated.toFixed(1) + " Bytes";
         } else { // show time
           str = Math.floor(this.mouseMarkerTime) + "ms";
         }

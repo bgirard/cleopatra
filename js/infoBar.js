@@ -27,6 +27,10 @@
           this.toggleShowPowerInfo();
           break;
 
+        case 'showHeapAllocatedInfo':
+          this.toggleShowHeapAllocatedInfo();
+          break;
+
         case 'txtPeakPower':
           this.changePeakPower();
           break;
@@ -107,6 +111,9 @@
         infoText += "<br><label><input type='checkbox' id='showPowerInfo' " + (gShowPowerInfo ?" checked='true' ":" ") + " />Show Power</label>\n";
         infoText += "<br>Peak Color: <label><input type='textbox' id='txtPeakPower' value='"+gPeakPower+"' >Watts</input></label>";
       }
+      if (gMeta && gMeta.hasHeapAllocatedInfo) {
+        infoText += "<br><label><input type='checkbox' id='showHeapAllocatedInfo' " + (gShowHeapAllocatedInfo ?" checked='true' ":" ") + " />Show heap-allocated</label>\n";
+      }
 
       infoText += "<h2>Share With URL</h2>\n";
       infoText += "<div id='upload_status' aria-live='polite'>No upload in progress</div><br>\n";
@@ -150,6 +157,9 @@
       if (gMeta && gMeta.hasPowerInfo) {
         document.getElementById('showPowerInfo').addEventListener('change', this);
         document.getElementById('txtPeakPower').addEventListener('change', this);
+      }
+      if (gMeta && gMeta.hasHeapAllocatedInfo) {
+        document.getElementById('showHeapAllocatedInfo').addEventListener('change', this);
       }
       //document.getElementById('delete_skipsymbol').onclick = delete_skip_symbol;
       //document.getElementById('add_skipsymbol').onclick = add_skip_symbol;
@@ -222,6 +232,11 @@
 
     toggleShowPowerInfo: function InfoBar_toggleShowPowerInfo() {
       gShowPowerInfo = !gShowPowerInfo;
+      window.dispatchEvent(new CustomEvent('filters-changed'));
+    },
+
+    toggleShowHeapAllocatedInfo: function InfoVar_toggleShowHeapAllocatedInfo() {
+      gShowHeapAllocatedInfo = !gShowHeapAllocatedInfo;
       window.dispatchEvent(new CustomEvent('filters-changed'));
     },
 

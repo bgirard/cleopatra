@@ -844,6 +844,10 @@ function parseRawProfile(requestID, params, rawProfile) {
           //dump("Got frame number: " + sample.frameNumber + "\n");
           frameStart[sample.frameNumber] = samples.length;
         }
+        if (sample['heap-allocated']) {
+          sample.extraInfo["heapAllocated"] = sample['heap-allocated'];
+          meta.hasHeapAllocatedInfo = true;
+        }
         samples.push(makeSample(indicedFrames, sample.extraInfo));
         progressReporter.setProgress((j + 1) / profileSamples.length);
       }
@@ -1410,11 +1414,22 @@ function calculateHistogramData(requestID, profileID, showMissedSample, options,
   var profile = gProfiles[profileID];
   var data = profile.filteredThreadSamples[threadId];
   var maxHeight = 0;
+  var maxHeapAllocated = 0;
+  var TOO_BIG = 99999999999.0;
+  var minHeapAllocated = TOO_BIG;
   for (var i in profile.filteredThreadSamples) {
     maxHeight = Math.max(maxHeight, profile.filteredThreadSamples[i].reduce(function (prev, curr, i, a) {
       curr = getHeight(curr);
       return curr > prev ? curr : prev;
     }, 0) + 1);
+    maxHeapAllocated = Math.max(maxHeapAllocated, profile.filteredThreadSamples[i].reduce(function (prev, curr, i, a) {
+      curr = curr.extraInfo.heapAllocated;
+      return curr > prev ? curr : prev;
+    }, 0) + 1);
+    minHeapAllocated = Math.min(minHeapAllocated, profile.filteredThreadSamples[i].reduce(function (prev, curr, i, a) {
+      curr = curr.extraInfo.heapAllocated;
+      return curr < prev ? curr : prev;
+    }, TOO_BIG) + 1);
   }
 
   var prevStep = null;
@@ -1429,6 +1444,11 @@ function calculateHistogramData(requestID, profileID, showMissedSample, options,
         movingHeight: movingHeight / (maxHeight / 100),
         time: step.extraInfo.time,
         power: step.extraInfo.power,
+        heapAllocated: step.extraInfo.heapAllocated,
+        minHeapAllocated: minHeapAllocated,
+        maxHeapAllocated: maxHeapAllocated,
+        scaledHeapAllocated: 100 * (step.extraInfo.heapAllocated - minHeapAllocated) /
+                                   (maxHeapAllocated - minHeapAllocated),
         markers: symbolicateMarkers(step.extraInfo.marker || []),
         color: getStepColor(step)
       };

@@ -59,6 +59,8 @@
     window.gShowPowerInfo = false;
     window.gPeakPower = 30; // Watts
 
+    window.gShowHeapAllocatedInfo = false;
+
     window.gJavascriptOnly = false;
 
     window.gSampleFilters = [];
