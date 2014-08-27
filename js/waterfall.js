@@ -8,13 +8,13 @@ function createElement(name, props) {
     if (key === "style") {
       for (var styleName in props.style) {
         el.style[styleName] = props.style[styleName];
-      }   
+      }
     } else {
       el[key] = props[key];
-    }   
-  }   
+    }
+  }
 
-  return el; 
+  return el;
 }
 
 var gLayersDumps = [];
@@ -106,7 +106,7 @@ Waterfall.createFrameUniformityView = function(compositeTimes) {
     var graph = {};
     for (var i = 1; i < layersDumps.length; i++) {
       var currLayersDump = parseLayers(layersDumps[i]);
-      
+
       compareLayers(prevLayersDump, currLayersDump, graph, currLayersDump.compositeTime);
       prevLayersDump = currLayersDump;
     }
@@ -211,6 +211,41 @@ Waterfall.createFrameUniformityView = function(compositeTimes) {
   return container;
 };
 
+Waterfall.createFramePositionView = function(framePositions) {
+  var container = createElement("div", {
+    className: "frameUniformityContainer",
+    id: "framePositionContainer",
+    style: {
+      background: "white",
+      height: "100%",
+    }
+  });
+
+  var graph = createElement("div", {
+    id: "positionUniformityGraph",
+    className: "frameGraph",
+    style: {
+      width: "1400px",
+      height: "800px",
+      padding: "5px",
+    }
+  });
+
+  document.body.appendChild(graph);
+  var chart = c3.generate({
+    bindto: '#positionUniformityGraph',
+    data: {
+        columns: framePositions
+    }
+  });
+  document.body.removeChild(graph);
+  // Have to reset graph.id to something else so when we repaint
+  // we can override this graph
+  graph.id = "";
+  container.appendChild(graph);
+  return container;
+};
+
 Waterfall.prototype = {
   getContainer: function Waterfall_getContainer() {
     return this.container;
@@ -229,7 +264,7 @@ Waterfall.prototype = {
       var frame = stack[i];
       str += frame + "\n";
     }
-    return str; 
+    return str;
   },
 
   formatDisplayListDump: function(displayListDump) {

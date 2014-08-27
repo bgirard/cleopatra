@@ -1182,10 +1182,10 @@ function filterByName(samples, symbols, functions, filterName, useFunctions) {
     if (!sample)
       continue;
     var callstack = sample.frames;
-    for (var j = 0; j < callstack.length; ++j) { 
+    for (var j = 0; j < callstack.length; ++j) {
       var symbolOrFunctionName = getSymbolOrFunctionName(callstack[j], useFunctions);
       var libraryName = getLibraryName(callstack[j], useFunctions);
-      if (symbolOrFunctionName.toLowerCase().indexOf(filterName) != -1 || 
+      if (symbolOrFunctionName.toLowerCase().indexOf(filterName) != -1 ||
           libraryName.toLowerCase().indexOf(filterName) != -1) {
         continue calltrace_it;
       }
@@ -2136,11 +2136,61 @@ function calculateWaterfallData(requestID, profileID, boundaries) {
     }
     return markersOut;
   }
-  
+
+  function appendToLayer(framePositions, layer, position) {
+    if (framePositions[layer] == undefined) {
+      framePositions[layer] = [layer];
+    }
+
+    framePositions[layer].push(position);
+  }
+
+  function filterLayerPositionByLayer(markersIn) {
+    // returns layer -> [ [layerLabelx, x1, x1], [layerLabely, y1, y2] ]
+    var framePositions = {};
+    for (var i = 0; i < markersIn.length; i++) {
+      var marker = markersIn[i];
+      var layer = marker.data.layer;
+      var layerX = layer + ".x";
+      var layerY = layer + ".y";
+      var position = [marker.data.x, marker.data.y];
+      if (position[0] == 0.0 && position[1] == 0.0) {
+        continue;
+      }
+
+      appendToLayer(framePositions, layerX, marker.data.x);
+      appendToLayer(framePositions, layerY, marker.data.y);
+    }
+
+    var layerResults = [];
+    for (var layerPositions in framePositions) {
+      layerResults.push(framePositions[layerPositions]);
+    }
+
+    return layerResults;;
+  }
+
+  function getUniformityMarkers(markersIn, boundaries) {
+    var markersOut = [];
+    for (var i = 0; i < markersIn.length; i++) {
+      if (markersIn[i].data &&
+          markersIn[i].name == "UniformityInfo Layer_Move") {
+        var time = markersIn[i].time;
+        if (time >= boundaries.min && time <= boundaries.max) {
+          markersOut.push(markersIn[i]);
+        }
+      }
+    }
+    var filteredLayers = filterLayerPositionByLayer(markersOut);
+    var layerCount = Object.keys(filteredLayers).length;
+    return filteredLayers;
+  }
+
   var result = {
     boundaries: boundaries,
     items: [],
     compositeTimes: [],
+    framePositions: [],
   };
   var mainThreadState = "Waiting";
   var compThreadState = "Waiting";
@@ -2281,6 +2331,7 @@ function calculateWaterfallData(requestID, profileID, boundaries) {
   if (compThread) {
     var compositeNumber = 0;
     paintMarkers = getPaintMarkers(compThreadMarkers);
+    result.framePositions = getUniformityMarkers(compThreadMarkers, boundaries);
     var compositorLogData = getThreadLogData(compThreadId, compThreadMarkers);
     for (i = 0; i < paintMarkers.length; i++) {
       marker = paintMarkers[i];

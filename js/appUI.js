@@ -368,6 +368,10 @@
               var frameUniformityView = Waterfall.createFrameUniformityView(data.compositeTimes);
               return frameUniformityView;
             });
+            gTabWidget.addTab("Uniformity", function() {
+              var positionUniformity = Waterfall.createFramePositionView(data.framePositions);
+              return positionUniformity;
+            });
           }
         });
         var logDataRequest = Parser.getLogData(boundaries);
