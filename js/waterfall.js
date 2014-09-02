@@ -211,7 +211,62 @@ Waterfall.createFrameUniformityView = function(compositeTimes) {
   return container;
 };
 
+// Frame Positions is in {layerLabel : [[x0, y0], [x1, y1]] } format
 Waterfall.createFramePositionView = function(framePositions) {
+  // Returns [ [layer1X, x0, x1..], [layer1Y, y0, y1..] ]
+  function formatForChart() {
+    var result = [];
+    for (layer in framePositions) {
+      var layerData = framePositions[layer];
+      var layerX = [layer + ".x"];
+      var layerY = [layer + ".y"];
+
+      for (var i = 0; i < layerData.length; i++) {
+        layerX.push(layerData[i][0]);
+        layerY.push(layerData[i][1]);
+      }
+
+      result.push(layerX);
+      result.push(layerY);
+    }
+
+    return result;
+  }
+
+  function createGraph() {
+    var graph = createElement("div", {
+      id: "positionUniformityGraph",
+      className: "frameGraph",
+      style: {
+        width: "1400px",
+        height: "800px",
+        padding: "5px",
+      }
+    });
+
+    var layerData = formatForChart();
+    document.body.appendChild(graph);
+    var chart = c3.generate({
+      bindto: '#positionUniformityGraph',
+      data: {
+          columns: layerData
+      }
+    });
+    document.body.removeChild(graph);
+    // Have to reset graph.id to something else so when we repaint
+    // we can override this graph
+    graph.id = "";
+    container.appendChild(graph);
+  }
+
+  function createFrameUniformityUsage(container) {
+    var text = "No frame position uniformity data. You can enable this view by " +
+               " setting the preference layers.uniformity-info to true and by " +
+               "profiling the compositor thread. To profile the compositor thread, " +
+               "Use the command './profile.sh start -p b2g -t Compositor'";
+    container.innerHTML = text;
+  }
+
   var container = createElement("div", {
     className: "frameUniformityContainer",
     id: "framePositionContainer",
@@ -221,28 +276,13 @@ Waterfall.createFramePositionView = function(framePositions) {
     }
   });
 
-  var graph = createElement("div", {
-    id: "positionUniformityGraph",
-    className: "frameGraph",
-    style: {
-      width: "1400px",
-      height: "800px",
-      padding: "5px",
-    }
-  });
+  var markerCount = Object.keys(framePositions).length;
+  if (markerCount != 0) {
+    createGraph()
+  } else {
+    createFrameUniformityUsage(container);
+  }
 
-  document.body.appendChild(graph);
-  var chart = c3.generate({
-    bindto: '#positionUniformityGraph',
-    data: {
-        columns: framePositions
-    }
-  });
-  document.body.removeChild(graph);
-  // Have to reset graph.id to something else so when we repaint
-  // we can override this graph
-  graph.id = "";
-  container.appendChild(graph);
   return container;
 };
 

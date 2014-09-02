@@ -2139,58 +2139,52 @@ function calculateWaterfallData(requestID, profileID, boundaries) {
 
   function appendToLayer(framePositions, layer, position) {
     if (framePositions[layer] == undefined) {
-      framePositions[layer] = [layer];
+      framePositions[layer] = [];
     }
 
     framePositions[layer].push(position);
   }
 
   function filterLayerPositionByLayer(markersIn) {
-    // returns layer -> [ [layerLabelx, x1, x1], [layerLabely, y1, y2] ]
+    // returns layer -> { layerAddress: [[x0, y0], [x1, y1]] }
     var framePositions = {};
     for (var i = 0; i < markersIn.length; i++) {
       var marker = markersIn[i];
-      var layer = marker.data.layer;
-      var layerX = layer + ".x";
-      var layerY = layer + ".y";
+      var layerLabel = marker.data.layer;
       var position = [marker.data.x, marker.data.y];
-      if (position[0] == 0.0 && position[1] == 0.0) {
-        continue;
+
+      // Tracking layers that are always 0 makes the graph super slow to parse
+      // so filter them out for now
+      if (position[0] != 0 || position[1] != 0) {
+        appendToLayer(framePositions, layerLabel, position);
       }
-
-      appendToLayer(framePositions, layerX, marker.data.x);
-      appendToLayer(framePositions, layerY, marker.data.y);
     }
 
-    var layerResults = [];
-    for (var layerPositions in framePositions) {
-      layerResults.push(framePositions[layerPositions]);
-    }
-
-    return layerResults;;
+    return framePositions;;
   }
 
   function getUniformityMarkers(markersIn, boundaries) {
+    console.log("Looking at markers\n");
     var markersOut = [];
     for (var i = 0; i < markersIn.length; i++) {
       if (markersIn[i].data &&
-          markersIn[i].name == "UniformityInfo Layer_Move") {
+          markersIn[i].name == "LayerTransform") {
         var time = markersIn[i].time;
         if (time >= boundaries.min && time <= boundaries.max) {
           markersOut.push(markersIn[i]);
         }
       }
     }
-    var filteredLayers = filterLayerPositionByLayer(markersOut);
-    var layerCount = Object.keys(filteredLayers).length;
-    return filteredLayers;
+
+    return markersOut;
   }
 
   var result = {
     boundaries: boundaries,
     items: [],
     compositeTimes: [],
-    framePositions: [],
+    framePositions: {},
+    frameMarkers: [],
   };
   var mainThreadState = "Waiting";
   var compThreadState = "Waiting";
@@ -2331,7 +2325,8 @@ function calculateWaterfallData(requestID, profileID, boundaries) {
   if (compThread) {
     var compositeNumber = 0;
     paintMarkers = getPaintMarkers(compThreadMarkers);
-    result.framePositions = getUniformityMarkers(compThreadMarkers, boundaries);
+    result.frameMarkers = getUniformityMarkers(compThreadMarkers, boundaries);
+    result.framePositions = filterLayerPositionByLayer(result.frameMarkers);
     var compositorLogData = getThreadLogData(compThreadId, compThreadMarkers);
     for (i = 0; i < paintMarkers.length; i++) {
       marker = paintMarkers[i];
