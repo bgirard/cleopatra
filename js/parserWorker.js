@@ -2328,8 +2328,7 @@ function calculateWaterfallData(requestID, profileID, boundaries) {
     var compositorLogData = getThreadLogData(compThreadId, compThreadMarkers);
     for (i = 0; i < paintMarkers.length; i++) {
       marker = paintMarkers[i];
-      if (marker.name == "Composite" && marker.data.interval == "start" &&
-          !startComposite) {
+      if (marker.name == "Composite" && marker.data.interval == "start") {
         startComposite = marker.time;
       } else if (marker.name == "Composite" && marker.data.interval == "end") {
         result.items.push({
