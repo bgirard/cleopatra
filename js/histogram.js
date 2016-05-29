@@ -512,10 +512,11 @@ var HistogramContainer;
       // markers are combined if they are at the same time
       var lastMarkerTime = -1;
       if (this.markers) {
+        const MARKER_TYPES_TO_DISPLAY = ["stack", "bhr"];
         for (var j = 0; j < this.markers.length; j++) {
           var marker = this.markers[j];
           // ignore markers that have data/category (waterfall markers)
-          if (marker.type == "stack" || !marker.data || !marker.data.category && marker.name != "gpu_timer_query") {
+          if (MARKER_TYPES_TO_DISPLAY.includes(marker.type) || !marker.data || !marker.data.category && marker.name != "gpu_timer_query") {
             // if the previous first marker of a set and this marker are
             //  within the same pixel, combine them
             if (lastMarkerTime != -1 && (lastMarkerTime + 5*step / barWidth > marker.time)) {
