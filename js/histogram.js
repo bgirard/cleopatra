@@ -316,10 +316,13 @@ var HistogramContainer;
         throw new Error("You need to call HistogramView.display first.");
       }
 
-      var r = this.canvas.getBoundingClientRect();
       var ctx = this.canvas.getContext("2d");
 
-      return { context: ctx, height: r.height, width: r.width };
+      // I don't know why we need this but we do because this is not equal to r.width on the first render
+      var width = parseInt(getComputedStyle(this.canvas, null).getPropertyValue("width"));
+      var height = parseInt(getComputedStyle(this.canvas, null).getPropertyValue("height"));
+
+      return { context: ctx, height: height, width: width };
     },
 
     selectRange: function(start, end) {
