@@ -312,6 +312,9 @@ function parseRawProfile(requestID, params, rawProfile) {
   if (rawProfile.profileJSON && !rawProfile.profileJSON.meta && rawProfile.meta) {
     rawProfile.profileJSON.meta = rawProfile.meta;
   }
+  if (rawProfile.profileJSON && !rawProfile.tasktracer && rawProfile.profileJSON.tasktracer) {
+    rawProfile.tasktracer = rawProfile.profileJSON.tasktracer;
+  }
 
   if (typeof rawProfile == "object") {
     switch (rawProfile.format) {
