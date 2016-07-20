@@ -312,6 +312,9 @@ function parseRawProfile(requestID, params, rawProfile) {
   if (rawProfile.profileJSON && !rawProfile.profileJSON.meta && rawProfile.meta) {
     rawProfile.profileJSON.meta = rawProfile.meta;
   }
+  if (rawProfile.profileJSON && !rawProfile.tasktracer && rawProfile.profileJSON.tasktracer) {
+    rawProfile.tasktracer = rawProfile.profileJSON.tasktracer;
+  }
 
   if (typeof rawProfile == "object") {
     switch (rawProfile.format) {
@@ -322,6 +325,9 @@ function parseRawProfile(requestID, params, rawProfile) {
       case "profileJSONWithSymbolicationTable,1":
         symbolicationTable = rawProfile.symbolicationTable;
         parseProfileJSON(rawProfile.profileJSON);
+        if (rawProfile.profileJSON.tasktracer) {
+          parseTaskTracer(rawProfile.tasktracer);
+        }
         break;
       default:
         parseProfileJSON(rawProfile);
@@ -918,6 +924,21 @@ function parseRawProfile(requestID, params, rawProfile) {
         }
       }
       return samples;
+    }
+  }
+
+  function parseTaskTracer(tasktracer) {
+    if (tasktracer) {
+      var data = tasktracer.data;
+      for (var i = 0; i < data.length; i++) {
+	var log = data[i];
+	if (log.substring(0,2) == "4 ") {
+	  var parts = log.split(" ");
+	  var addr = "0x" + parts[2];
+	  parts[2] = String(indexForSymbol(addr));
+	  data[i] = parts.join(" ");
+	}
+      }
     }
   }
 
